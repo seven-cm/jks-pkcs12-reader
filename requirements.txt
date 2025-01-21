@@ -1,0 +1,4 @@
+pyjks
+cryptography
+pyOpenSSL
+pyinstaller

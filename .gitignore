@@ -1,0 +1,15 @@
+# 忽略所有 .pyc 文件
+*.pyc
+
+# 忽略特定目录
+__pycache__/
+venv/
+.idea/
+*.iml
+
+# 忽略特定文件
+config.ini
+secrets.json
+
+# 忽略日志文件
+*.log

@@ -1,0 +1,19 @@
+{
+    "title": "JKS/PKCS12 (Android Signing Certificate) Keystore Reader",
+    "password_dialog_title": "Password",
+    "password_label": "Please enter the keystore password:",
+    "ok_button": "OK",
+    "open_button": "Open Keystore",
+    "copy_modulus_button": "Copy Modulus",
+    "copy_md5_button": "Copy MD5",
+    "error_password_required": "Password is required.",
+    "error_unsupported_format": "Unsupported keystore format.",
+    "error_reading_keystore": "Error reading keystore: {}",
+    "keystore_type_pkcs12": "Detected PKCS12 keystore.",
+    "keystore_type_jks": "Detected JKS keystore.",
+    "certificate_info": "Certificate Information:",
+    "additional_certificates": "Additional Certificates:",
+    "private_key_entry": "Entry Type: Private Key Entry",
+    "trusted_cert_entry": "Entry Type: Trusted Certificate Entry",
+    "unknown_entry": "Entry Type: Unknown"
+}

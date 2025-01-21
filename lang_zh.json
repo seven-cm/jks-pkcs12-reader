@@ -1,0 +1,19 @@
+{
+    "title": "JKS/PKCS12 (Android签名证书) 密钥库读取器",
+    "password_dialog_title": "密码",
+    "password_label": "请输入密钥库密码:",
+    "ok_button": "确定",
+    "open_button": "打开密钥库",
+    "copy_modulus_button": "复制模数",
+    "copy_md5_button": "复制 MD5",
+    "error_password_required": "必须输入密码。",
+    "error_unsupported_format": "不支持的密钥库格式。",
+    "error_reading_keystore": "读取密钥库时出错: {}",
+    "keystore_type_pkcs12": "检测到 PKCS12 密钥库。",
+    "keystore_type_jks": "检测到 JKS 密钥库。",
+    "certificate_info": "证书信息:",
+    "additional_certificates": "附加证书:",
+    "private_key_entry": "条目类型: 私钥条目",
+    "trusted_cert_entry": "条目类型: 受信任证书条目",
+    "unknown_entry": "条目类型: 未知"
+}
