@@ -1,5 +1,3 @@
-Here’s a polished and professional project description suitable for a GitHub repository:
-
 ---
 
 # JKS/PKCS12 Keystore Reader
