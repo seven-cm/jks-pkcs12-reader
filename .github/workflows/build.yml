@@ -29,13 +29,13 @@ jobs:
         pyinstaller --onefile --windowed -n jks-pkcs12-reader --add-data "lang_en.json;." --add-data "lang_zh.json;." main.py  # 根据你的 Python 脚本修改文件名
 
     - name: Upload EXE as artifact
-      uses: actions/upload-artifact@v3  # 这里升级到 v3
+      uses: actions/upload-artifact@v4  # 这里升级到 v3
       with:
         name: myprogram-${{ github.ref_name }}
         path: dist/jks-pkcs12-reader.exe  # 生成的 EXE 文件路径
 
     - name: Create GitHub Release
-      uses: softprops/action-gh-release@v1
+      uses: softprops/action-gh-release@v2
       with:
         tag_name: ${{ github.ref_name }}
         files: dist/jks-pkcs12-reader.exe
