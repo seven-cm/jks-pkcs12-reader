@@ -11,10 +11,10 @@ jobs:
 
     steps:
     - name: Checkout code
-      uses: actions/checkout@v2
+      uses: actions/checkout@v3
 
     - name: Set up Python
-      uses: actions/setup-python@v2
+      uses: actions/setup-python@v4
       with:
         python-version: '3.10'  # 设置你的 Python 版本
 
@@ -29,7 +29,15 @@ jobs:
         pyinstaller --onefile --windowed -n jks-pkcs12-reader --add-data "lang_en.json;." --add-data "lang_zh.json;." main.py  # 根据你的 Python 脚本修改文件名
 
     - name: Upload EXE as artifact
-      uses: actions/upload-artifact@v2
+      uses: actions/upload-artifact@v3  # 这里升级到 v3
       with:
-        name: myprogram
-        path: dist/jks-pkcs12-reader.exe  # PyInstaller 输出的 EXE 文件路径
+        name: myprogram-${{ github.ref_name }}
+        path: dist/jks-pkcs12-reader.exe  # 生成的 EXE 文件路径
+
+    - name: Create GitHub Release
+      uses: softprops/action-gh-release@v1
+      with:
+        tag_name: ${{ github.ref_name }}
+        files: dist/jks-pkcs12-reader.exe
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
