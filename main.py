@@ -9,13 +9,25 @@ import json
 import os
 
 # 加载语言配置文件
+import sys
+
+
 def load_language(lang_code):
     lang_file = f"lang_{lang_code}.json"
-    if os.path.exists(lang_file):
-        with open(lang_file, "r", encoding="utf-8") as f:
+
+    # 如果是打包后的环境
+    if getattr(sys, 'frozen', False):
+        base_path = sys._MEIPASS  # 获取临时解压目录
+    else:
+        base_path = os.path.dirname(os.path.abspath(__file__))  # 开发环境
+
+    lang_path = os.path.join(base_path, lang_file)
+
+    if os.path.exists(lang_path):
+        with open(lang_path, "r", encoding="utf-8") as f:
             return json.load(f)
     else:
-        raise FileNotFoundError(f"Language file {lang_file} not found.")
+        raise FileNotFoundError(f"Language file {lang_path} not found.")
 
 # 全局变量，用于存储当前语言
 current_lang = "en"  # 默认语言为英语
