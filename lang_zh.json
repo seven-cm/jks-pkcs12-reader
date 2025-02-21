@@ -6,6 +6,7 @@
     "open_button": "打开文件",
     "copy_modulus_button": "复制模数",
     "copy_md5_button": "复制 MD5",
+    "copy_sha1_button": "复制 SHA1",
     "error_password_required": "必须输入密码。",
     "error_unsupported_format": "不支持的密钥库格式。",
     "error_reading_keystore": "读取密钥库时出错: {}",

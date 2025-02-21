@@ -58,6 +58,7 @@ def copy_to_clipboard(text):
         root.clipboard_append(text)  # 添加原始文本到剪贴板
     root.update()  # 更新剪贴板内容
 
+
 def get_certificate_fingerprint(cert, algorithm="sha256"):
     """
     计算证书的指纹（MD5、SHA1 或 SHA256）。
@@ -128,7 +129,7 @@ def get_certificate_details(cert):
     details += f"    SHA1: {sha1_fingerprint}\n"
     details += f"    SHA256: {sha256_fingerprint}\n"
 
-    return details, modulus, md5_fingerprint
+    return details, modulus, md5_fingerprint, sha1_fingerprint
 
 
 def read_pkcs12_keystore(keystore_path, password, text_widget):
@@ -150,7 +151,7 @@ def read_pkcs12_keystore(keystore_path, password, text_widget):
 
         # 显示证书详细信息
         text_widget.insert(tk.END, "Certificate Information:\n")
-        details, modulus, md5_fingerprint = get_certificate_details(certificate)
+        details, modulus, md5_fingerprint, sha1_fingerprint = get_certificate_details(certificate)
         text_widget.insert(tk.END, details)
 
         # 如果有附加证书，显示附加证书信息
@@ -160,12 +161,12 @@ def read_pkcs12_keystore(keystore_path, password, text_widget):
                 text_widget.insert(tk.END, f"Certificate {idx + 1}:\n")
                 text_widget.insert(tk.END, get_certificate_details(additional_cert)[0])
 
-        return modulus, md5_fingerprint
+        return modulus, md5_fingerprint, sha1_fingerprint
 
     except Exception as e:
         text_widget.insert(tk.END, f"Error reading PKCS12 keystore: {e}\n")
         messagebox.showerror("Error", f"Failed to read PKCS12 keystore: {e}")
-        return None, None
+        return None, None, None
 
 
 def read_jks_keystore(keystore_path, password, text_widget):
@@ -181,6 +182,7 @@ def read_jks_keystore(keystore_path, password, text_widget):
 
         modulus = None
         md5_fingerprint = None
+        sha1_fingerprint = None
 
         # 遍历所有条目
         for alias, entry in keystore.entries.items():
@@ -191,31 +193,35 @@ def read_jks_keystore(keystore_path, password, text_widget):
                 for cert in entry.cert_chain:
                     # 将 pyjks 的证书转换为 cryptography 的 x509.Certificate 对象
                     cert = x509.load_der_x509_certificate(cert[1])
-                    details, mod, md5 = get_certificate_details(cert)
+                    details, mod, md5, sha1 = get_certificate_details(cert)
                     text_widget.insert(tk.END, details)
                     if mod is not None:
                         modulus = mod
                     if md5 is not None:
                         md5_fingerprint = md5
+                    if sha1 is not None:
+                        sha1_fingerprint = sha1
             elif isinstance(entry, jks.TrustedCertEntry):
                 text_widget.insert(tk.END, "Entry Type: Trusted Certificate Entry\n")
                 # 将 pyjks 的证书转换为 cryptography 的 x509.Certificate 对象
                 cert = x509.load_der_x509_certificate(entry.cert)
-                details, mod, md5 = get_certificate_details(cert)
+                details, mod, md5, sha1 = get_certificate_details(cert)
                 text_widget.insert(tk.END, details)
                 if mod is not None:
                     modulus = mod
                 if md5 is not None:
                     md5_fingerprint = md5
+                if sha1 is not None:
+                    sha1_fingerprint = sha1
             else:
                 text_widget.insert(tk.END, "Entry Type: Unknown\n")
 
-        return modulus, md5_fingerprint
+        return modulus, md5_fingerprint, sha1_fingerprint
 
     except Exception as e:
         text_widget.insert(tk.END, f"Error reading JKS keystore: {e}\n")
         messagebox.showerror("Error", f"Failed to read JKS keystore: {e}")
-        return None, None
+        return None, None, None
 
 
 def get_file_type(file_path):
@@ -245,7 +251,7 @@ def read_keystore(keystore_path, password, text_widget):
         return read_jks_keystore(keystore_path, password, text_widget)
     else:
         text_widget.insert(tk.END, "Unsupported keystore format.\n")
-        return None, None
+        return None, None, None
 
 
 def custom_password_dialog(parent):
@@ -307,22 +313,26 @@ def open_file(text_widget):
             # APK 文件处理逻辑
             try:
                 text_widget.delete(1.0, tk.END)  # 清空文本框
-                modulus, md5_fingerprint = get_certificate_info(file_path, text_widget)
+                modulus, md5_fingerprint, sha1_fingerprint = get_certificate_info(file_path, text_widget)
                 if modulus:
                     copy_modulus_button.config(state=tk.NORMAL, command=lambda: copy_to_clipboard(str(modulus)))
                 if md5_fingerprint:
                     copy_md5_button.config(state=tk.NORMAL, command=lambda: copy_to_clipboard(md5_fingerprint))
+                if sha1_fingerprint:
+                    copy_sha1_button.config(state=tk.NORMAL, command=lambda: copy_to_clipboard(sha1_fingerprint))
             except Exception as e:
                 text_widget.insert(tk.END, f"Error processing APK file: {str(e)}\n")
         else:
             custom_password_dialog(root)
             if password:
                 text_widget.delete(1.0, tk.END)  # 清空文本框
-                modulus, md5_fingerprint = read_keystore(file_path, password, text_widget)
+                modulus, md5_fingerprint, sha1_fingerprint = read_keystore(file_path, password, text_widget)
                 if modulus:
                     copy_modulus_button.config(state=tk.NORMAL, command=lambda: copy_to_clipboard(str(modulus)))
                 if md5_fingerprint:
                     copy_md5_button.config(state=tk.NORMAL, command=lambda: copy_to_clipboard(md5_fingerprint))
+                if sha1_fingerprint:
+                    copy_sha1_button.config(state=tk.NORMAL, command=lambda: copy_to_clipboard(sha1_fingerprint))
             else:
                 messagebox.showerror("Error", lang_texts["error_password_required"])
 
@@ -393,7 +403,7 @@ def get_certificate_info(apk_path, text_widget):
     text_widget.insert(tk.END, f"    MD5: {md5_hex}\n")
     text_widget.insert(tk.END, f"    SHA1: {sha1_hex}\n")
     text_widget.insert(tk.END, f"    SHA256: {sha256_hex}\n")
-    return modulus, md5_hex
+    return modulus, md5_hex, sha1_hex
 
 
 # 创建 GUI
@@ -405,15 +415,18 @@ if __name__ == "__main__":
     text_widget = scrolledtext.ScrolledText(root, wrap=tk.WORD, width=100, height=30)
     text_widget.pack(padx=10, pady=10)
 
-    button_frame = tk.Frame(root)
-    button_frame.pack(pady=10)
+    checkbox_frame = tk.Frame(root)
+    checkbox_frame.pack(pady=10)
 
     checkbox_var = tk.IntVar()
     checkbox = tk.Checkbutton(
-        button_frame,
+        checkbox_frame,
         text=lang_texts["check_box"],
         variable=checkbox_var)
     checkbox.pack(side=tk.LEFT, padx=5)
+
+    button_frame = tk.Frame(root)
+    button_frame.pack(pady=10)
 
     open_button = tk.Button(button_frame, text=lang_texts["open_button"], command=lambda: open_file(text_widget))
     open_button.pack(side=tk.LEFT, padx=5)
@@ -424,6 +437,8 @@ if __name__ == "__main__":
     copy_md5_button = tk.Button(button_frame, text=lang_texts["copy_md5_button"], state=tk.DISABLED)
     copy_md5_button.pack(side=tk.LEFT, padx=5)
 
+    copy_sha1_button = tk.Button(button_frame, text=lang_texts["copy_sha1_button"], state=tk.DISABLED)
+    copy_sha1_button.pack(side=tk.LEFT, padx=5)
 
 
     # 添加语言切换功能
@@ -436,6 +451,7 @@ if __name__ == "__main__":
         checkbox.config(text=lang_texts["check_box"])
         copy_modulus_button.config(text=lang_texts["copy_modulus_button"])
         copy_md5_button.config(text=lang_texts["copy_md5_button"])
+        copy_sha1_button.config(text=lang_texts["copy_sha1_button"])
 
 
     # 添加语言切换按钮

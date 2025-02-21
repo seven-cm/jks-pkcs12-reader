@@ -6,6 +6,7 @@
     "open_button": "Open Files",
     "copy_modulus_button": "Copy Modulus",
     "copy_md5_button": "Copy MD5",
+    "copy_sha1_button": "Copy SHA1",
     "error_password_required": "Password is required.",
     "error_unsupported_format": "Unsupported keystore format.",
     "error_reading_keystore": "Error reading keystore: {}",
