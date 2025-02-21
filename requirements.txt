@@ -2,3 +2,5 @@ pyjks
 cryptography
 pyOpenSSL
 pyinstaller
+androguard
+asn1crypto

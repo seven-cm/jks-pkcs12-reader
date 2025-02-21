@@ -3,7 +3,7 @@
     "password_dialog_title": "密码",
     "password_label": "请输入密钥库密码:",
     "ok_button": "确定",
-    "open_button": "打开密钥库",
+    "open_button": "打开文件",
     "copy_modulus_button": "复制模数",
     "copy_md5_button": "复制 MD5",
     "error_password_required": "必须输入密码。",
@@ -15,5 +15,6 @@
     "additional_certificates": "附加证书:",
     "private_key_entry": "条目类型: 私钥条目",
     "trusted_cert_entry": "条目类型: 受信任证书条目",
-    "unknown_entry": "条目类型: 未知"
+    "unknown_entry": "条目类型: 未知",
+    "check_box": "是否去掉冒号？（勾选后复制会去掉冒号）"
 }

@@ -3,7 +3,7 @@
     "password_dialog_title": "Password",
     "password_label": "Please enter the keystore password:",
     "ok_button": "OK",
-    "open_button": "Open Keystore",
+    "open_button": "Open Files",
     "copy_modulus_button": "Copy Modulus",
     "copy_md5_button": "Copy MD5",
     "error_password_required": "Password is required.",
@@ -15,5 +15,6 @@
     "additional_certificates": "Additional Certificates:",
     "private_key_entry": "Entry Type: Private Key Entry",
     "trusted_cert_entry": "Entry Type: Trusted Certificate Entry",
-    "unknown_entry": "Entry Type: Unknown"
+    "unknown_entry": "Entry Type: Unknown",
+    "check_box": "Should the colon be removed? (If checked, copying will remove the colon)"
 }

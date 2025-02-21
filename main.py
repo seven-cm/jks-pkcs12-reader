@@ -4,6 +4,13 @@ from cryptography.hazmat.primitives import serialization, hashes
 from cryptography.hazmat.primitives.serialization import pkcs12
 from cryptography import x509
 from cryptography.hazmat.primitives.asymmetric import rsa, ec
+
+from androguard.core.apk import APK
+from cryptography import x509
+from cryptography.hazmat.backends import default_backend
+from cryptography.hazmat.primitives import hashes
+from cryptography.hazmat.primitives.serialization import Encoding
+
 import jks
 import json
 import os
@@ -29,6 +36,7 @@ def load_language(lang_code):
     else:
         raise FileNotFoundError(f"Language file {lang_path} not found.")
 
+
 # 全局变量，用于存储当前语言
 current_lang = "en"  # 默认语言为英语
 lang_texts = load_language(current_lang)
@@ -37,12 +45,17 @@ lang_texts = load_language(current_lang)
 password = None
 root = None
 
+
 def copy_to_clipboard(text):
     """
     将文本复制到剪贴板。
     """
     root.clipboard_clear()  # 清空剪贴板
-    root.clipboard_append(text)  # 添加文本到剪贴板
+    if checkbox_var.get() == 1:
+        modified_text = text.replace(':', '')  # 替换冒号为空字符串
+        root.clipboard_append(modified_text)  # 添加修改后的文本到剪贴板
+    else:
+        root.clipboard_append(text)  # 添加原始文本到剪贴板
     root.update()  # 更新剪贴板内容
 
 def get_certificate_fingerprint(cert, algorithm="sha256"):
@@ -62,6 +75,7 @@ def get_certificate_fingerprint(cert, algorithm="sha256"):
     fingerprint = cert.fingerprint(hash_algorithm)
     return ":".join(f"{b:02X}" for b in fingerprint)
 
+
 def get_rsa_public_key_details(public_key):
     """
     获取 RSA 公钥的详细信息。
@@ -77,6 +91,7 @@ def get_rsa_public_key_details(public_key):
     details += f"    Modulus: {modulus}\n"
     details += f"    Exponent: {exponent}\n"
     return details, modulus  # 返回模数
+
 
 def get_certificate_details(cert):
     """
@@ -113,7 +128,8 @@ def get_certificate_details(cert):
     details += f"    SHA1: {sha1_fingerprint}\n"
     details += f"    SHA256: {sha256_fingerprint}\n"
 
-    return details, modulus, md5_fingerprint.replace(":", "")  # 返回 MD5 指纹（去掉冒号）
+    return details, modulus, md5_fingerprint
+
 
 def read_pkcs12_keystore(keystore_path, password, text_widget):
     """
@@ -150,6 +166,7 @@ def read_pkcs12_keystore(keystore_path, password, text_widget):
         text_widget.insert(tk.END, f"Error reading PKCS12 keystore: {e}\n")
         messagebox.showerror("Error", f"Failed to read PKCS12 keystore: {e}")
         return None, None
+
 
 def read_jks_keystore(keystore_path, password, text_widget):
     """
@@ -200,6 +217,7 @@ def read_jks_keystore(keystore_path, password, text_widget):
         messagebox.showerror("Error", f"Failed to read JKS keystore: {e}")
         return None, None
 
+
 def get_file_type(file_path):
     """
     通过魔数判断文件类型。
@@ -212,6 +230,7 @@ def get_file_type(file_path):
             return "PKCS12"
         else:
             return "Unknown"
+
 
 def read_keystore(keystore_path, password, text_widget):
     """
@@ -227,6 +246,7 @@ def read_keystore(keystore_path, password, text_widget):
     else:
         text_widget.insert(tk.END, "Unsupported keystore format.\n")
         return None, None
+
 
 def custom_password_dialog(parent):
     dialog = tk.Toplevel(parent)
@@ -265,25 +285,116 @@ def custom_password_dialog(parent):
     dialog.grab_set()
     root.wait_window(dialog)
 
+
 def open_file(text_widget):
     """
-    打开文件对话框并读取密钥库文件。
+    打开文件对话框并读取密钥库文件或APK文件。
+    支持 .jks, .p12, .pfx 和 .apk 文件类型。
     """
     file_path = filedialog.askopenfilename(
         title=lang_texts["open_button"],
-        filetypes=[("Keystore Files", "*.jks *.p12 *.pfx"), ("All Files", "*.*")]
+        filetypes=[
+            ("Keystore and APK Files", "*.jks *.p12 *.pfx *.apk"),
+            ("Keystore Files", "*.jks *.p12 *.pfx"),
+            ("APK Files", "*.apk"),
+            ("All Files", "*.*")
+        ]
     )
-    if file_path:
-        custom_password_dialog(root)
-        if password:
-            text_widget.delete(1.0, tk.END)  # 清空文本框
-            modulus, md5_fingerprint = read_keystore(file_path, password, text_widget)
-            if modulus:
-                copy_modulus_button.config(state=tk.NORMAL, command=lambda: copy_to_clipboard(str(modulus)))
-            if md5_fingerprint:
-                copy_md5_button.config(state=tk.NORMAL, command=lambda: copy_to_clipboard(md5_fingerprint))
+
+    if file_path:  # 确保用户选择了文件
+        file_extension = os.path.splitext(file_path.lower())[1]  # 获取文件扩展名并转为小写
+        if file_extension == '.apk':
+            # APK 文件处理逻辑
+            try:
+                text_widget.delete(1.0, tk.END)  # 清空文本框
+                modulus, md5_fingerprint = get_certificate_info(file_path, text_widget)
+                if modulus:
+                    copy_modulus_button.config(state=tk.NORMAL, command=lambda: copy_to_clipboard(str(modulus)))
+                if md5_fingerprint:
+                    copy_md5_button.config(state=tk.NORMAL, command=lambda: copy_to_clipboard(md5_fingerprint))
+            except Exception as e:
+                text_widget.insert(tk.END, f"Error processing APK file: {str(e)}\n")
         else:
-            messagebox.showerror("Error", lang_texts["error_password_required"])
+            custom_password_dialog(root)
+            if password:
+                text_widget.delete(1.0, tk.END)  # 清空文本框
+                modulus, md5_fingerprint = read_keystore(file_path, password, text_widget)
+                if modulus:
+                    copy_modulus_button.config(state=tk.NORMAL, command=lambda: copy_to_clipboard(str(modulus)))
+                if md5_fingerprint:
+                    copy_md5_button.config(state=tk.NORMAL, command=lambda: copy_to_clipboard(md5_fingerprint))
+            else:
+                messagebox.showerror("Error", lang_texts["error_password_required"])
+
+
+# 从APK中读取签名信息
+def format_fingerprint(digest):
+    """将字节形式的指纹转换为冒号分隔的十六进制字符串"""
+    return ':'.join(f'{byte:02X}' for byte in digest)
+
+
+def get_certificate_info(apk_path, text_widget):
+    # 加载 APK，只解析签名部分
+    apk = APK(apk_path, skip_analysis=True)  # 跳过代码和资源分析
+
+    # 获取证书（支持 v1/v2/v3/v4 签名）
+    certs = apk.get_certificates()
+    if not certs:
+        print("No certificates found in the APK.")
+        return
+
+    # 使用第一个证书
+    cert = certs[0]
+
+    # 检查证书类型并获取公钥
+    if isinstance(cert, x509.Certificate):
+        # 如果是 cryptography 的证书对象
+        public_key = cert.public_key()
+    else:
+        # 如果是 asn1crypto 的证书对象，转换为 cryptography 对象
+        cert_der = cert.dump()  # 获取 DER 编码
+        cert = x509.load_der_x509_certificate(cert_der, default_backend())
+        public_key = cert.public_key()
+
+    # 获取公钥参数
+    numbers = public_key.public_numbers()
+    modulus = numbers.n
+    exponent = numbers.e
+
+    # 获取证书 DER 格式用于计算指纹
+    cert_der = cert.public_bytes(encoding=Encoding.DER)
+
+    # 计算证书指纹
+    md5_digest = hashes.Hash(hashes.MD5(), backend=default_backend())
+    md5_digest.update(cert_der)
+    md5_hex = format_fingerprint(md5_digest.finalize())
+
+    sha1_digest = hashes.Hash(hashes.SHA1(), backend=default_backend())
+    sha1_digest.update(cert_der)
+    sha1_hex = format_fingerprint(sha1_digest.finalize())
+
+    sha256_digest = hashes.Hash(hashes.SHA256(), backend=default_backend())
+    sha256_digest.update(cert_der)
+    sha256_hex = format_fingerprint(sha256_digest.finalize())
+
+    # 格式化证书信息
+    text_widget.insert(tk.END, "Type: X.509\n")
+    text_widget.insert(tk.END, f"Version: v{cert.version.value + 1}\n")
+    text_widget.insert(tk.END, f"Serial Number: {hex(cert.serial_number)}\n")
+    text_widget.insert(tk.END, f"Subject: {cert.subject.rfc4514_string()}\n")
+    text_widget.insert(tk.END, f"Valid From (UTC): {cert.not_valid_before_utc.isoformat()}+00:00\n")
+    text_widget.insert(tk.END, f"Valid Until (UTC): {cert.not_valid_after_utc.isoformat()}+00:00\n")
+    text_widget.insert(tk.END, "Public Key Type: RSA\n")
+    text_widget.insert(tk.END, f"    Modulus Size (bits): {public_key.key_size}\n")
+    text_widget.insert(tk.END, f"    Modulus: {modulus}\n")
+    text_widget.insert(tk.END, f"    Exponent: {exponent}\n")
+    text_widget.insert(tk.END, f"Signature Algorithm: {cert.signature_algorithm_oid._name}\n")
+    text_widget.insert(tk.END, "Certificate Fingerprints:\n")
+    text_widget.insert(tk.END, f"    MD5: {md5_hex}\n")
+    text_widget.insert(tk.END, f"    SHA1: {sha1_hex}\n")
+    text_widget.insert(tk.END, f"    SHA256: {sha256_hex}\n")
+    return modulus, md5_hex
+
 
 # 创建 GUI
 if __name__ == "__main__":
@@ -297,6 +408,13 @@ if __name__ == "__main__":
     button_frame = tk.Frame(root)
     button_frame.pack(pady=10)
 
+    checkbox_var = tk.IntVar()
+    checkbox = tk.Checkbutton(
+        button_frame,
+        text=lang_texts["check_box"],
+        variable=checkbox_var)
+    checkbox.pack(side=tk.LEFT, padx=5)
+
     open_button = tk.Button(button_frame, text=lang_texts["open_button"], command=lambda: open_file(text_widget))
     open_button.pack(side=tk.LEFT, padx=5)
 
@@ -306,6 +424,8 @@ if __name__ == "__main__":
     copy_md5_button = tk.Button(button_frame, text=lang_texts["copy_md5_button"], state=tk.DISABLED)
     copy_md5_button.pack(side=tk.LEFT, padx=5)
 
+
+
     # 添加语言切换功能
     def change_language(lang_code):
         global current_lang, lang_texts
@@ -313,8 +433,10 @@ if __name__ == "__main__":
         lang_texts = load_language(lang_code)
         root.title(lang_texts["title"])
         open_button.config(text=lang_texts["open_button"])
+        checkbox.config(text=lang_texts["check_box"])
         copy_modulus_button.config(text=lang_texts["copy_modulus_button"])
         copy_md5_button.config(text=lang_texts["copy_md5_button"])
+
 
     # 添加语言切换按钮
     language_frame = tk.Frame(root)
