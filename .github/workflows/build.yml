@@ -31,7 +31,7 @@ jobs:
 
     - name: Build the EXE using PyInstaller
       run: |
-        pyinstaller --onefile --windowed -n jks-pkcs12-reader --add-data "lang_en.json;." --add-data "lang_zh.json;." main.py  # 根据你的 Python 脚本修改文件名
+        pyinstaller --onefile --windowed -n jks-pkcs12-reader --add-data "lang_en.json;." --add-data "lang_zh.json;." --add-data "public.xml;androguard\core\resources" main.py  # 根据你的 Python 脚本修改文件名
 
     - name: Upload EXE as artifact
       uses: actions/upload-artifact@v4
