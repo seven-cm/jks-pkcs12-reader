@@ -1,11 +1,8 @@
 import tkinter as tk
 from tkinter import filedialog, messagebox, scrolledtext
-from cryptography.hazmat.primitives import serialization, hashes
 from cryptography.hazmat.primitives.serialization import pkcs12
-from cryptography import x509
 from cryptography.hazmat.primitives.asymmetric import rsa, ec
 
-from androguard.core.apk import APK
 from cryptography import x509
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives import hashes
@@ -17,6 +14,12 @@ import os
 
 # 加载语言配置文件
 import sys
+import tempfile
+
+if sys.stdout is None:
+    sys.stdout = open(tempfile.gettempdir() + "/androguard_stdout.log", "w")
+
+from androguard.core.apk import APK
 
 
 def load_language(lang_code):
